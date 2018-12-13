@@ -2,7 +2,10 @@ import time
 
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import spectrogram
+from scipy.signal import medfilt2d, spectrogram
+
+
+HISTOGRAM_BINS = np.linspace(-np.pi, np.pi, 100)
 
 
 def get_onset_envelopes(x, r):
@@ -14,16 +17,32 @@ def get_onset_envelopes(x, r):
     spectro_flux = np.zeros(spectro.shape)
     spectro_flux[:, 1:] = (spectro_abs - np.roll(spectro_abs, 1, axis=1))[:, 1:]
     spectro_flux[spectro_flux < 0] = 0.0
-    onset_envelope = spectro_flux.sum(axis=0)
-    return times, onset_envelope
+    onset_envelopes = spectro_flux.sum(axis=0)
+    return times, onset_envelopes
 
 
-def get_directogram(f_t):
-    pass
+def get_directogram(flow):
+    norms = np.linalg.norm(flow, axis=2)
+    angles = np.arctan2(flow[:, :, 1], flow[:, :, 0])
+    angle_indicators = np.digitize(angles, HISTOGRAM_BINS)
+    directogram = np.zeros((len(HISTOGRAM_BINS),))
+    for y in range(flow.shape[0]):
+        for x in range(flow.shape[1]):
+            directogram[angle_indicators[y, x]] += norms[y, x]
+    return directogram
 
 
-def get_impact_envelopes(directogram):
-    pass
+def get_impact_envelopes(directograms):
+    directogram = np.vstack(directograms)
+    filtered_directogram = medfilt2d(directogram)
+    flux = np.zeros(directogram.shape)
+    flux[1:, :] = (filtered_directogram - np.roll(filtered_directogram, 1, axis=0))[1:, :]
+    flux[flux < 0] = 0.0
+    impact_envelopes = flux.sum(axis=1)
+    clip_threshold = np.percentile(impact_envelopes, 98)
+    impact_envelopes[impact_envelopes > clip_threshold] = 0
+    impact_envelopes = impact_envelopes / impact_envelopes.max()
+    return impact_envelopes
 
 
 # a = Audio('input_files/audio/zeze/zeze.wav')

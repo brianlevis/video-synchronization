@@ -17,10 +17,10 @@ def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
     video = Video('input_files/video/' + video_name)
     # Compute peaks
     audio_peaks = local_envelope_peaks(audio)
-    video_peaks = local_peaks_falling_edge(video)  # delay frames
+    video_peaks = local_envelope_peaks(video)
 
-    # audio.plot(markers=audio_peaks)
-    # video.plot(markers=video_peaks)
+    audio.plot(markers=audio_peaks)
+    video.plot(markers=video_peaks)
 
     audio_peaks_sync, video_peaks_sync = synchronize_peaks(
         audio, audio_peaks, video, video_peaks
@@ -36,9 +36,9 @@ def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
 # synchronize_video('drum_116.wav', 'tap_still/tap_still.mp4', 'tap_still/tap_still_output_f.mp4')
 # synchronize_video('drum_116.wav', 'tap_moving/tap_moving.mp4', 'tap_moving/tap_moving_output.mp4')
 # synchronize_video('zeze/zeze.webm', 'zeze/fruit_salad.mp4', 'zeze/wiggles.mp4')
-# synchronize_video('zeze/zeze_beat.webm', 'zeze/gummy.mp4', 'zeze/bear_beat_no_words.mp4')
+# synchronize_video('zeze/zeze_beat.webm', 'gummy/gummy.mp4', 'zeze/bear_beat_en.mp4',
 #                   replace_audio='zeze/zeze.webm')
 # synchronize_video('drum_116.wav', 'turtle/turtle.mp4', 'turtle/turtle_drum.mp4')
 # synchronize_video('frank/pyramids.webm', 'frank/dance.mp4', 'frank/dancing.mp4')
-synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_audio_en.mp4')
-# synchronize_video('zeze/zeze_beat.wav', 'gummy/gummy.mp4', 'gummy_zeze_beat_words.mp4', replace_audio='zeze/zeze.wav')
+synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_audio_en_av.mp4')
+# synchronize_video('zeze/zeze.wav', 'gummy/gummy.mp4', 'gummy_zeze_beat_words_n.mp4', replace_audio='zeze/zeze.wav')

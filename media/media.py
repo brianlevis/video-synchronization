@@ -6,10 +6,11 @@ from abc import ABC, abstractmethod
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
+from imutils.video import FileVideoStream, FPS
 from numpy.core.multiarray import dtype
 from scipy.io import wavfile
 
-from synchronize import get_onset_envelopes
+from synchronize import get_directogram, get_impact_envelopes, get_onset_envelopes
 
 
 class Media(ABC):
@@ -53,9 +54,8 @@ class Media(ABC):
         ) = data
 
     def plot(self, markers=None):
-        # envelope_sample_rate = self.envelope_times[1] - self.envelope_times[0]
         period = 1 / self.sample_rate
-        num_points = min(len(self.time_series), int(30 * self.sample_rate))
+        num_points = min(len(self.time_series), int(10 * self.sample_rate))
         t = np.linspace(0.0, period * num_points, num_points)
         fig = plt.figure(figsize=(40, 5))
         ax = fig.add_subplot(1, 1, 1)
@@ -113,25 +113,39 @@ class Video(Media):
     def compute_attributes(self):
         input_stream = cv.VideoCapture(self.file_name)
         self.sample_rate = input_stream.get(cv.CAP_PROP_FPS)
+        input_stream.release()
+        # Use multithreading
+        input_stream = FileVideoStream(self.file_name).start()
         flows = [0.0]
-        ret, frame = input_stream.read()
+        directograms = []
+        directogram_times = []
+        # ret, frame = input_stream.read()
+        frame = input_stream.read()
         last_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        while ret:
+        self.shape = frame.shape
+        while input_stream.more():
             if len(flows) % 250 == 0:
                 print('Video Processing: {:.2f}s'.format(len(flows) / self.sample_rate))
-            ret, frame = input_stream.read()
-            if not ret:
+            frame = input_stream.read()
+            # ret, frame = input_stream.read()
+            # if not ret:
+            #     break
+            if not input_stream.more():
                 break
             next_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             flow = cv.calcOpticalFlowFarneback(
                 last_frame, next_frame, None, 0.5, 3, 15, 3, 5, 1.2, 0
             )
-            flows.append(self._calculate_movement(flow))
-            if self.shape is None:
-                self.shape = frame.shape
+            directograms.append(get_directogram(flow))
+            directogram_times.append(len(flows) / self.sample_rate)
+            # flows.append(self._calculate_movement(flow))
+            flows.append(directograms[-1])  # remove this <3
             last_frame = next_frame
+        self.envelopes = get_impact_envelopes(directograms)
+        self.envelope_times = np.array(directogram_times)
         self.time_series = np.array(flows)
-        input_stream.release()
+        # input_stream.release()
+        input_stream.stop()
 
     def convert_file(self):
         pass
