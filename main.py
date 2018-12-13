@@ -2,7 +2,7 @@ import sys
 import time
 
 from media import Audio, Video
-from peak import local_peaks, local_peaks_falling_edge
+from peak import local_envelope_peaks, local_peaks_falling_edge
 from synchronize import convert_video, synchronize_peaks
 
 
@@ -16,7 +16,7 @@ def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
     audio = Audio('input_files/audio/' + audio_name)
     video = Video('input_files/video/' + video_name)
     # Compute peaks
-    audio_peaks = local_peaks(audio)
+    audio_peaks = local_envelope_peaks(audio)
     video_peaks = local_peaks_falling_edge(video)  # delay frames
 
     # audio.plot(markers=audio_peaks)
@@ -40,5 +40,5 @@ def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
 #                   replace_audio='zeze/zeze.webm')
 # synchronize_video('drum_116.wav', 'turtle/turtle.mp4', 'turtle/turtle_drum.mp4')
 # synchronize_video('frank/pyramids.webm', 'frank/dance.mp4', 'frank/dancing.mp4')
-synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_audio_e.mp4')
+synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_audio_en.mp4')
 # synchronize_video('zeze/zeze_beat.wav', 'gummy/gummy.mp4', 'gummy_zeze_beat_words.mp4', replace_audio='zeze/zeze.wav')

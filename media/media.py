@@ -9,6 +9,8 @@ import numpy as np
 from numpy.core.multiarray import dtype
 from scipy.io import wavfile
 
+from synchronize import get_onset_envelopes
+
 
 class Media(ABC):
     def __init__(self, file_name):
@@ -17,6 +19,8 @@ class Media(ABC):
         self.data_name = self.file_name + '_data.pkl'
         self.sample_rate = None
         self.time_series = None
+        self.envelope_times = None
+        self.envelopes = None
         self.shape = None
         if os.path.isfile(self.data_name):
             self.load_data()
@@ -35,7 +39,8 @@ class Media(ABC):
     def save_data(self):
         data = (
             self.file_name, self.data_name,
-            self.sample_rate, self.time_series, self.shape
+            self.sample_rate, self.envelopes, self.envelope_times,
+            self.time_series, self.sample_rate, self.shape
         )
         pickle.dump(data, open(self.data_name, 'wb'))
 
@@ -43,10 +48,12 @@ class Media(ABC):
         data = pickle.load(open(self.data_name, 'rb'))
         (
             self.file_name, self.data_name,
-            self.sample_rate, self.time_series, self.shape
+            self.sample_rate, self.envelopes, self.envelope_times,
+            self.time_series, self.sample_rate, self.shape
         ) = data
 
     def plot(self, markers=None):
+        # envelope_sample_rate = self.envelope_times[1] - self.envelope_times[0]
         period = 1 / self.sample_rate
         num_points = min(len(self.time_series), int(30 * self.sample_rate))
         t = np.linspace(0.0, period * num_points, num_points)
@@ -71,7 +78,10 @@ class Audio(Media):
         self.shape = data.shape
         assert data.dtype == dtype('int16')
         data = data / (2. ** 15)
-        self.time_series = np.abs(data.mean(axis=1))
+        self.time_series = data.mean(axis=1)
+        self.envelope_times, self.envelopes = get_onset_envelopes(
+            self.time_series, self.sample_rate
+        )
 
     def convert_file(self):
         if not self.file_name.endswith('.wav'):

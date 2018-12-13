@@ -4,8 +4,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.signal import spectrogram
 
-from media import Audio
-
 
 def get_onset_envelopes(x, r):
     # http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf
@@ -20,7 +18,12 @@ def get_onset_envelopes(x, r):
     return times, onset_envelope
 
 
-# def get_impact_envelopes()
+def get_directogram(f_t):
+    pass
+
+
+def get_impact_envelopes(directogram):
+    pass
 
 
 # a = Audio('input_files/audio/zeze/zeze.wav')

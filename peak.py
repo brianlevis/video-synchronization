@@ -1,12 +1,19 @@
-import cv2
 import numpy as np
 from scipy.signal import find_peaks
 
 
-# def
+def local_envelope_peaks(media):
+    sample_rate = 1 / (media.envelope_times[1] - media.envelope_times[0])
+    peaks, _ = find_peaks(
+        media.envelopes, distance=int(sample_rate / 4)  # , height=time_series.mean()
+    )
+    # Convert envelope indices into time_series indices
+    peak_times = media.envelope_times[peaks]
+    peak_indices = (peak_times * media.sample_rate).astype('int')
+    return peak_indices
 
 
-def local_peaks(media, min_distance=None):
+def local_peaks(media):
     time_series = media.time_series
     sample_rate = media.sample_rate
     # peaks, _ = find_peaks(time_series, distance=min_distance * sample_rate)
@@ -19,7 +26,7 @@ def local_peaks(media, min_distance=None):
     return peaks
 
 
-def local_peaks_falling_edge(media, min_distance=None):
+def local_peaks_falling_edge(media):
     time_series = media.time_series
     sample_rate = media.sample_rate
     # peaks, _ = find_peaks(time_series, distance=min_distance * sample_rate)
