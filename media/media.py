@@ -116,7 +116,7 @@ class Video(Media):
         input_stream.release()
         # Use multithreading
         input_stream = FileVideoStream(self.file_name).start()
-        flows = [0.0]
+        # flows = [0.0]
         directograms = []
         directogram_times = []
         # ret, frame = input_stream.read()
@@ -124,8 +124,8 @@ class Video(Media):
         last_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         self.shape = frame.shape
         while input_stream.more():
-            if len(flows) % 250 == 0:
-                print('Video Processing: {:.2f}s'.format(len(flows) / self.sample_rate))
+            if len(directograms) % 250 == 0:
+                print('Video Processing: {:.2f}s'.format(len(directograms) / self.sample_rate))
             frame = input_stream.read()
             # ret, frame = input_stream.read()
             # if not ret:
@@ -137,13 +137,12 @@ class Video(Media):
                 last_frame, next_frame, None, 0.5, 3, 15, 3, 5, 1.2, 0
             )
             directograms.append(get_directogram(flow))
-            directogram_times.append(len(flows) / self.sample_rate)
+            directogram_times.append(len(directograms) / self.sample_rate)
             # flows.append(self._calculate_movement(flow))
-            flows.append(directograms[-1])  # remove this <3
             last_frame = next_frame
         self.envelopes = get_impact_envelopes(directograms)
         self.envelope_times = np.array(directogram_times)
-        self.time_series = np.array(flows)
+        self.time_series = np.array([0]+list(self.envelopes))
         # input_stream.release()
         input_stream.stop()
 

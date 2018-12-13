@@ -2,6 +2,31 @@ import numpy as np
 from scipy.signal import find_peaks
 
 
+LOCAL_MEAN_WINDOW = 0.2
+LOCAL_MAX_WINDOW = 0.3
+
+
+def impacts(media):
+    # Video only!
+    global_max = media.envelopes.max()
+    mean_window_delta = int(LOCAL_MEAN_WINDOW / 2 * media.sample_rate)
+    max_window_delta = int(LOCAL_MAX_WINDOW / 2 * media.sample_rate)
+    peaks = []
+    for i in range(max_window_delta + 4, len(media.envelope_times) - max_window_delta - 4):
+        local_mean = (
+            media.envelopes[i - mean_window_delta:i].mean() +
+            media.envelopes[i+1:i+1 + mean_window_delta].mean()
+        ) / 2
+        local_max = max(
+            media.envelopes[i - max_window_delta:i].max(),
+            media.envelopes[i+1:i+1 + max_window_delta].max()
+        )
+        current = media.envelopes[i]
+        if current > local_max and (current - local_mean) > 0.1 * global_max:
+            peaks.append(i)
+    return np.array(peaks)
+
+
 def local_envelope_peaks(media):
     sample_rate = 1 / (media.envelope_times[1] - media.envelope_times[0])
     peaks, _ = find_peaks(

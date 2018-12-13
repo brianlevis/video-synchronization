@@ -2,7 +2,7 @@ import sys
 import time
 
 from media import Audio, Video
-from peak import local_envelope_peaks, local_peaks_falling_edge
+from peak import local_envelope_peaks, impacts
 from synchronize import convert_video, synchronize_peaks
 
 
@@ -12,7 +12,7 @@ assert sys.version_info.major == 3
 def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
     print('{} + {} -> {}'.format(audio_name, video_name, output_name))
     start_time = time.time()
-    # Load one-dimensional data and save if necessary
+    # Load one-dimensional datra and save if necessary
     audio = Audio('input_files/audio/' + audio_name)
     video = Video('input_files/video/' + video_name)
     # Compute peaks
@@ -40,5 +40,13 @@ def synchronize_video(audio_name, video_name, output_name, replace_audio=None):
 #                   replace_audio='zeze/zeze.webm')
 # synchronize_video('drum_116.wav', 'turtle/turtle.mp4', 'turtle/turtle_drum.mp4')
 # synchronize_video('frank/pyramids.webm', 'frank/dance.mp4', 'frank/dancing.mp4')
-synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_audio_en_av.mp4')
-# synchronize_video('zeze/zeze.wav', 'gummy/gummy.mp4', 'gummy_zeze_beat_words_n.mp4', replace_audio='zeze/zeze.wav')
+# synchronize_video('red/red.wav', 'car/car.mp4', 'redmercedes_impacts.mp4')
+# synchronize_video('zeze/zeze.wav', 'gummy/gummy.mp4', 'zeze_gummy_impact.mp4')
+# synchronize_video('zeze/zeze_beat.wav', 'gummy/gummy.mp4', 'zeze_gummy_impact_beat.mp4', replace_audio='zeze/zeze.wav')
+
+synchronize_video('beat/beat.m4a', 'army/army.mp4', 'favorites/beatit.mp4')
+synchronize_video('clean_mix/short/cello.mp3', 'geese/geese.mp4', 'favorites/honk_honk.mp4')
+synchronize_video('clean_mix/01_ric_short.m4a', 'gummy/happy_smol.mp4', 'favorites/ric_flair.mp4')
+synchronize_video('club/club.m4a', 'gummy/gummy.mp4', 'favorites/kids.mp4')
+synchronize_video('clean_mix/clean_mix_2.wav', 'ballet/ballet.mp4', 'favorites/ballet.mp4')
+
