@@ -126,7 +126,7 @@ def intervals_to_peaks(intervals):
     return peaks
 
 
-def combine_videos(left_video, right_video, output_name, audio):
+def combine_videos(left_video_name, right_video_name, output_name, audio_name):
     cmd = """
         ffmpeg \
         -i {} \
@@ -136,9 +136,20 @@ def combine_videos(left_video, right_video, output_name, audio):
         -c:v libx264 \
         -crf 23 \
         -preset veryfast \
-        {}
+        {}_temp.mp4
         """.format(
-        left_video, right_video, output_name
+        left_video_name, right_video_name, output_name
     )
     subprocess.call(cmd, shell=True)
+    cmd = """
+            ffmpeg -i {}_temp.mp4 \
+            -i {} \
+            -c:v copy -c:a aac -strict experimental \
+            {}
+        """.format(
+        output_name, audio_name, output_name
+    )
+    subprocess.call(cmd, shell=True)
+    subprocess.call("rm {}_temp.mp4".format(output_name), shell=True)
+
 
