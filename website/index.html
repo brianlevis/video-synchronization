@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <head>
+        <title>CS 194-26 Final Project</title>
+        <style>body { font-family: 'Open Sans', sans-serif; }</style>
+    </head>
+    <body>
+        <h1>CS 194-26 Final Project: Synchronizing Videos to Music</h1>
+        <h3>Overview</h3>
+        <p>My goal for this project was to alter the progression of video frames to match an audio accompaniment.</p>
+        <h3>Sample Results</h3>
+        <p>(in the form of copyright-infringing videos)</p>
+        <iframe width=640 height=360 src="https://drive.google.com/file/d/1cSHLuvPqO2U4EsIztz0oldGbmmb-sMRA/preview"></iframe>
+        <p>A ballerina dances to changing music.</p>
+        <iframe width=640 height=360 src="https://drive.google.com/file/d/1fc32oY7rCBnoyHHfrc0N9RAR1uYEqpw3/preview"></iframe>
+        <p>A montage of clips - ballet, soldiers, children, and a flock of dogs.</p>
+        <h2>Technical Explanation</h2>
+        <p><a href="http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf">This paper</a> aims to accomplish a similar task. I found that my results looked a little better when I implemented the match-candidate detection from this paper, accounting for pitch changes and directional motion. This paper additionally creates tempograms to locally align audio and video rhythms, and has some <a href="http://abedavis.com/visualbeat/">pretty neat results.</a></p>
+        <div align="middle">
+            <iframe width=1708 height=480 src="https://drive.google.com/file/d/1W_dVXmfuHDTkFpOdbJv6vrlcpZ0uDO4E/preview"></iframe>
+            <p>The Wiggles show off their flashy car to the instrumental of REDMERCEDES.</p>
+        </div>
+        <h3>Dimensionality Reduction for Music</h3>
+        <p>Compute the spectogram (complex, time-valued FFT) of the mono-audio signal. The spectral flux between time steps indicates change in both pitch and volume. Sum the positive frequency values across their axis to get a vector of beat-onset envelopes.</p>
+        <div align="middle">
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/audio_signal.png" align="middle" height="550px"/>
+                        <figcaption align="middle">audio signal from above, with match points</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/spectrogram.png" align="middle" height="550px"/>
+                        <figcaption align="middle">spectrogram</figcaption>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/spectral_flux.png" align="middle" height="550px"/>
+                        <figcaption align="middle">spectral flux</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/onset_envelopes.png" align="middle" height="550px"/>
+                        <figcaption align="middle">onset envelopes</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h3>Dimensionality Reduction for Video</h3>
+        <p>The process for video is analogous. Replace frequency with angles, and frequency strength with the magnitude of motion in that direction. Motion for each angle is created by binning and summing optical flow vectors for every pixel.
+        Sum positive magnitudes to compute deceleration, apply a median filter to account for duplicated frames, and remove outliers that may indicate transitions to obtain impact envelopes.</p>
+        <div align="middle">
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/video_signal.png" align="middle" height="550px"/>
+                        <figcaption align="middle">video signal from above, with match points</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/directogram.png" align="middle" height="550px"/>
+                        <figcaption align="middle">directogram</figcaption>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/deceleration.png" align="middle" height="550px"/>
+                        <figcaption align="middle">deceleration</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/impact_envelopes.png" align="middle" height="550px"/>
+                        <figcaption align="middle">impact envelopes</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h3>Peak Detection</h3>
+        <p>Matching points are computed for both media types as a simple local maximum. The minimum distance between peaks is a constant factor of the sample</p>
+        <div align="middle">
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/final/res/audio_signal" align="middle" height="550px"/>
+                        <figcaption align="middle">The fir</figcaption>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj4/res/blue_meanie.gif" align="middle" height="550px"/>
+                        <figcaption align="middle">blue meanie >:O</figcaption>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj4/res/andrew.gif" align="middle" height="550px"/>
+                        <figcaption align="middle">my friend has turned into a poster</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>Images were shifted as a function of their offset from the center, and scaled by an alpha that rolled from a start to a stop (within -1.0 to 1.0).</p>
+        <div align="middle">
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_chess.gif" align="middle" height="400px"/>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_bulldozer.gif" align="middle" height="400px"/>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_taro.gif" align="middle" height="400px"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h2>Aperture Adjustment</h2>
+        <p>Starting from the center image, each frame consists of the addition of the set of next closest images.</p>
+        <div align="middle">
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_chess.gif" align="middle" height="400px"/>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_bulldozer.gif" align="middle" height="400px"/>
+                    </td>
+                    <td>
+                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_taro.gif" align="middle" height="400px"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h2>Summary</h2>
+        <p>Capturing a large amount of data with specialized equipment allows for a lot to be done. More complicated optical equations can have simple solutions.</p>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-105387166-2"></script>
+        <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','UA-105387166-2');</script>
+    </body>
+</html>

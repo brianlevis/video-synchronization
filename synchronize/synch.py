@@ -1,6 +1,7 @@
 import math
 import os
 import subprocess
+import time
 
 import cv2 as cv
 import numpy as np
@@ -127,6 +128,7 @@ def intervals_to_peaks(intervals):
 
 
 def combine_videos(left_video_name, right_video_name, output_name, audio_name):
+    time.sleep(2)
     cmd = """
         ffmpeg \
         -i {} \
@@ -141,6 +143,7 @@ def combine_videos(left_video_name, right_video_name, output_name, audio_name):
         left_video_name, right_video_name, output_name
     )
     subprocess.call(cmd, shell=True)
+    time.sleep(2)
     cmd = """
             ffmpeg -i {}_temp.mp4 \
             -i {} \
