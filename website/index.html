@@ -15,8 +15,9 @@
         <p>A ballerina dances to changing music.</p>
         <iframe width=640 height=360 src="https://drive.google.com/file/d/1fc32oY7rCBnoyHHfrc0N9RAR1uYEqpw3/preview"></iframe>
         <p>A montage of clips - ballet, soldiers, children, and a flock of dogs.</p>
+        <a href="https://github.com/brianlevis/video-synchronization">View, download, and run code here.</a>
         <h2>Technical Explanation</h2>
-        <p><a href="http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf">This paper</a> aims to accomplish a similar task. I found that my results looked a little better when I implemented the match-candidate detection from this paper, accounting for pitch changes and directional motion. This paper additionally creates tempograms to locally align audio and video rhythms, and has some <a href="http://abedavis.com/visualbeat/">pretty neat results.</a></p>
+        <p><a href="http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf">This paper</a> from Abe Davis aims to accomplish a similar task. I found that my results looked a little better when I implemented the match-candidate detection from this paper, accounting for pitch changes and directional motion. This paper additionally creates tempograms to locally align audio and video rhythms, and has some <a href="http://abedavis.com/visualbeat/">pretty neat results.</a></p>
         <div align="middle">
             <iframe width=1708 height=480 src="https://drive.google.com/file/d/1W_dVXmfuHDTkFpOdbJv6vrlcpZ0uDO4E/preview"></iframe>
             <p>The Wiggles show off their flashy car to the instrumental of REDMERCEDES.</p>
@@ -78,61 +79,22 @@
                 </tr>
             </table>
         </div>
-        <h3>Peak Detection</h3>
-        <p>Matching points are computed for both media types as a simple local maximum. The minimum distance between peaks is a constant factor of the sample</p>
+        <h3>Aligning Media</h3>
+        <p>Matching points are computed for both media types as a simple local maximum. The minimum distance between peaks is a constant factor of the sample rate.
+        I found that peak detection on the impact envelopes yielded similar results to running peak detection with optical flow magnitude and using the falling edge.</p>
         <div align="middle">
             <table>
                 <tr>
                     <td>
-                        <img src="https://brianlevis.com/cs194-26/final/res/audio_signal" align="middle" height="550px"/>
-                        <figcaption align="middle">The fir</figcaption>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj4/res/blue_meanie.gif" align="middle" height="550px"/>
-                        <figcaption align="middle">blue meanie >:O</figcaption>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj4/res/andrew.gif" align="middle" height="550px"/>
-                        <figcaption align="middle">my friend has turned into a poster</figcaption>
+                        <img src="https://brianlevis.com/cs194-26/final/res/warp_curve.png" align="middle" height="550px"/>
+                        <figcaption align="middle">warp curve from the paper referenced above</figcaption>
                     </td>
                 </tr>
             </table>
         </div>
-        <p>Images were shifted as a function of their offset from the center, and scaled by an alpha that rolled from a start to a stop (within -1.0 to 1.0).</p>
-        <div align="middle">
-            <table>
-                <tr>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_chess.gif" align="middle" height="400px"/>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_bulldozer.gif" align="middle" height="400px"/>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/dr_taro.gif" align="middle" height="400px"/>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <h2>Aperture Adjustment</h2>
-        <p>Starting from the center image, each frame consists of the addition of the set of next closest images.</p>
-        <div align="middle">
-            <table>
-                <tr>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_chess.gif" align="middle" height="400px"/>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_bulldozer.gif" align="middle" height="400px"/>
-                    </td>
-                    <td>
-                        <img src="https://brianlevis.com/cs194-26/proj5/res/aa_taro.gif" align="middle" height="400px"/>
-                    </td>
-                </tr>
-            </table>
-        </div>
+        <p>Match points were iteratively matched together, and constrained by bounds on video speed change. Audio was resized as necessary. Once match points were found, each section of video was reinterpolated and aligned with the audio. My frames were equally spaced temporally, but Abe Davis spaced frames using a 3rd-degree polynomial fitted to match times.</p>
         <h2>Summary</h2>
-        <p>Capturing a large amount of data with specialized equipment allows for a lot to be done. More complicated optical equations can have simple solutions.</p>
+        <p>I have reached a result I am happy with, but I will continue to experiment with tweaks, and mostly try to copy stuff that Abe does.</p>
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-105387166-2"></script>
         <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','UA-105387166-2');</script>
     </body>
