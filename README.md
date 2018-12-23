@@ -21,7 +21,7 @@ sychronize/
 
 ### Required Media Folders
 input_files/
----- audio
----- video
+---- audio/
+---- video/
 output_files/
 ```
