@@ -78,10 +78,25 @@ class Audio(Media):
         self.shape = data.shape
         assert data.dtype == dtype('int16')
         data = data / (2. ** 15)
-        self.time_series = data.mean(axis=1)
+        self.time_series = data.mean(axis=1)[:(9503032//5)]
+        # self.plot()
         self.envelope_times, self.envelopes = get_onset_envelopes(
             self.time_series, self.sample_rate
         )
+        # period = 1 / self.sample_rate
+        # t = np.linspace(0.0, period * len(self.time_series), len(self.time_series))
+        # plt.clf()
+        # fig = plt.figure(figsize=(40, 5))
+        # ax = fig.add_subplot(1, 1, 1)
+        # num_points = len(self.time_series)
+        # ax.plot(t[:num_points], self.time_series[:num_points])
+        # plt.savefig('audio_signal.png')
+        # plt.clf()
+        # fig = plt.figure(figsize=(40, 5))
+        # ax = fig.add_subplot(1, 1, 1)
+        # num_points = len(self.envelopes)
+        # ax.plot(self.envelope_times[:num_points], self.envelopes[:num_points])
+        # plt.savefig('onset_envelopes.png')
 
     def convert_file(self):
         if not self.file_name.endswith('.wav'):
@@ -116,7 +131,7 @@ class Video(Media):
         input_stream.release()
         # Use multithreading
         input_stream = FileVideoStream(self.file_name).start()
-        # flows = [0.0]
+        flows = [0.0]
         directograms = []
         directogram_times = []
         # ret, frame = input_stream.read()
@@ -138,11 +153,27 @@ class Video(Media):
             )
             directograms.append(get_directogram(flow))
             directogram_times.append(len(directograms) / self.sample_rate)
-            # flows.append(self._calculate_movement(flow))
+            flows.append(self._calculate_movement(flow))
             last_frame = next_frame
-        self.envelopes = get_impact_envelopes(directograms)
+            if len(flows) > 3805 // 5:
+                break
         self.envelope_times = np.array(directogram_times)
-        self.time_series = np.array([0]+list(self.envelopes))
+        self.envelopes = get_impact_envelopes(directograms, self.envelope_times)
+        self.time_series = np.array(flows)
+        # period = 1 / self.sample_rate
+        # t = np.linspace(0.0, period * len(self.time_series), len(self.time_series))
+        # plt.clf()
+        # fig = plt.figure(figsize=(40, 5))
+        # ax = fig.add_subplot(1, 1, 1)
+        # num_points = len(self.time_series)
+        # ax.plot(t[:num_points], self.time_series[:num_points])
+        # plt.savefig('video_signal.png')
+        # plt.clf()
+        # fig = plt.figure(figsize=(40, 5))
+        # ax = fig.add_subplot(1, 1, 1)
+        # num_points = len(self.envelopes)
+        # ax.plot(self.envelope_times[:num_points], self.envelopes[:num_points])
+        # plt.savefig('impact_envelopes.png')
         # input_stream.release()
         input_stream.stop()
 

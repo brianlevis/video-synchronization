@@ -30,7 +30,7 @@ def impacts(media):
 def local_envelope_peaks(media):
     sample_rate = 1 / (media.envelope_times[1] - media.envelope_times[0])
     peaks, _ = find_peaks(
-        media.envelopes, distance=int(sample_rate / 4)  # , height=time_series.mean()
+        media.envelopes, distance=int(sample_rate / 3)  # , height=time_series.mean()
     )
     # Convert envelope indices into time_series indices
     peak_times = media.envelope_times[peaks]

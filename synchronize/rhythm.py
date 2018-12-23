@@ -1,24 +1,51 @@
-import time
-
 import numpy as np
-from matplotlib import pyplot as plt
+from librosa.feature import tempogram
+from matplotlib import pyplot as plt, colors
 from scipy.signal import medfilt2d, spectrogram
 
 
 HISTOGRAM_BINS = np.linspace(-np.pi, np.pi, 100)
 
 
-def get_onset_envelopes(x, r):
+def get_onset_envelopes(time_series, sample_rate, plot=False):
     # http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf
     # Section 3.1-3.2
 
-    frequencies, times, spectro = spectrogram(x, fs=r, mode='complex')
+    if plot:
+        frequencies, times, spectro = spectrogram(time_series, fs=sample_rate)
+        plot_colormesh(
+            times, frequencies, spectro,
+            'Time [sec]', 'Frequency [Hz]',
+            file_name='spectrogram.png'
+        )
+    # TODO: get rid of 224x size reduction for 48kHz audio
+    frequencies, times, spectro = spectrogram(time_series, fs=sample_rate, mode='complex')
     spectro_abs = np.absolute(spectro)
     spectro_flux = np.zeros(spectro.shape)
     spectro_flux[:, 1:] = (spectro_abs - np.roll(spectro_abs, 1, axis=1))[:, 1:]
     spectro_flux[spectro_flux < 0] = 0.0
+    if plot:
+        plot_colormesh(
+            times, frequencies, spectro_flux,
+            'Time [sec]', 'Frequency [Hz]',
+            file_name='spectro_flux.png'
+        )
     onset_envelopes = spectro_flux.sum(axis=0)
     return times, onset_envelopes
+
+
+def get_tempogram(time_series, times, sample_rate, onset_envelopes):
+    # This function is not in use
+    # T_a(n, k) = Sum_q (u_a(hn+q) u_a(hn+q+k) w(q)) / (2N+1−k)
+    hl = 512*48000//sample_rate
+    wl = 5*sample_rate//(512*48000//sample_rate)
+    # TODO: y and onset_envelope need to be the same sr
+    tempo = tempogram(
+        y=time_series, onset_envelope=onset_envelopes, sr=sample_rate,
+        hop_length=512*48000//sample_rate,
+        win_length=5*sample_rate//(512*48000//sample_rate)
+    )
+    # plot_colormesh(times, frequencies, tempo)
 
 
 def get_directogram(flow):
@@ -32,12 +59,24 @@ def get_directogram(flow):
     return directogram
 
 
-def get_impact_envelopes(directograms):
+def get_impact_envelopes(directograms, times, plot=False):
     directogram = np.vstack(directograms)
     filtered_directogram = medfilt2d(directogram)
+    if plot:
+        plot_colormesh(
+            times, HISTOGRAM_BINS, directogram.T,
+            'Time [sec]', 'Angle [Rad]',
+            file_name='directogram.png'
+        )
     flux = np.zeros(directogram.shape)
     flux[1:, :] = (filtered_directogram - np.roll(filtered_directogram, 1, axis=0))[1:, :]
     flux[flux < 0] = 0.0
+    if plot:
+        plot_colormesh(
+            times, HISTOGRAM_BINS, flux.T,
+            'Time [sec]', 'Angle [Rad]',
+            file_name='deceleration.png'
+        )
     impact_envelopes = flux.sum(axis=1)
     clip_threshold = np.percentile(impact_envelopes, 98)
     impact_envelopes[impact_envelopes > clip_threshold] = 0
@@ -45,26 +84,11 @@ def get_impact_envelopes(directograms):
     return impact_envelopes
 
 
-# a = Audio('input_files/audio/zeze/zeze.wav')
-# start_time = time.time()
-#
-# a.time_series = a.time_series[:len(a.time_series)//20]
-#
-# times, envelope = get_onset_envelopes(
-#     a.time_series,
-#     a.sample_rate
-# )
-#
-# period = 1 / a.sample_rate
-# num_points = len(a.time_series)
-# t = np.linspace(0.0, period * num_points, num_points)
-# fig = plt.figure(figsize=(40, 5))
-# ax = fig.add_subplot(1, 1, 1)
-# ax.plot(t, a.time_series)
-# ax.plot(times, envelope)
-# plt.show()
-#
-#
-# print(envelope)
-# print('Finished in {:.2f}s'.format(time.time() - start_time))
-
+def plot_colormesh(x_axis, y_axis, z_axis, x_label, y_label, file_name=None):
+    plt.clf()
+    plt.pcolormesh(x_axis, y_axis, z_axis, norm=colors.PowerNorm(gamma=1. / 2.))
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    if file_name is not None:
+        plt.savefig(file_name)
+    plt.show()
