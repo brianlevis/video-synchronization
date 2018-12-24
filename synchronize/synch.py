@@ -7,7 +7,7 @@ import cv2 as cv
 import numpy as np
 
 
-SPEEDUP_RANGE = (0.3, 3)
+SPEEDUP_RANGE = (0.5, 2)
 
 
 def convert_video(audio, audio_peaks, video, video_peaks, output_filename, manual_audio):
@@ -116,7 +116,7 @@ def synchronize_peaks(audio, audio_peaks, video, video_peaks, plot=False):
 def peaks_to_intervals(peaks, media):
     first = [peaks[0]]
     middle = [peaks[i+1] - peaks[i] for i in range(len(peaks) - 1)]
-    last = [len(media.time_series) - peaks[-1]]
+    last = [media.shape[0] - peaks[-1]]
     return first + middle + last
 
 

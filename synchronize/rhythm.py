@@ -10,7 +10,6 @@ HISTOGRAM_BINS = np.linspace(-np.pi, np.pi, 100)
 def get_onset_envelopes(time_series, sample_rate, plot=False):
     # http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf
     # Section 3.1-3.2
-
     if plot:
         frequencies, times, spectro = spectrogram(time_series, fs=sample_rate)
         plot_colormesh(
