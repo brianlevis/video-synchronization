@@ -1,8 +1,6 @@
 import numpy as np
-from librosa.feature import tempogram
+import scipy.signal as scisignal
 from matplotlib import pyplot as plt, colors
-from scipy.signal import medfilt2d, spectrogram
-
 
 HISTOGRAM_BINS = np.linspace(-np.pi, np.pi, 100)
 
@@ -11,16 +9,16 @@ def get_onset_envelopes(time_series, sample_rate, plot=False):
     # http://www.abedavis.com/files/papers/VisualRhythm_Davis18.pdf
     # Section 3.1-3.2
     if plot:
-        frequencies, times, spectro = spectrogram(time_series, fs=sample_rate)
+        frequencies, times, spectrogram = scisignal.spectrogram(time_series, fs=sample_rate)
         plot_colormesh(
-            times, frequencies, spectro,
+            times, frequencies, spectrogram,
             'Time [sec]', 'Frequency [Hz]',
             file_name='spectrogram.png'
         )
     # TODO: get rid of 224x size reduction for 48kHz audio
-    frequencies, times, spectro = spectrogram(time_series, fs=sample_rate, mode='complex')
-    spectro_abs = np.absolute(spectro)
-    spectro_flux = np.zeros(spectro.shape)
+    frequencies, times, spectrogram = scisignal.spectrogram(time_series, fs=sample_rate, mode='complex')
+    spectro_abs = np.absolute(spectrogram)
+    spectro_flux = np.zeros(spectrogram.shape)
     spectro_flux[:, 1:] = (spectro_abs - np.roll(spectro_abs, 1, axis=1))[:, 1:]
     spectro_flux[spectro_flux < 0] = 0.0
     if plot:
@@ -31,20 +29,6 @@ def get_onset_envelopes(time_series, sample_rate, plot=False):
         )
     onset_envelopes = spectro_flux.sum(axis=0)
     return times, onset_envelopes
-
-
-def get_tempogram(time_series, times, sample_rate, onset_envelopes):
-    # This function is not in use
-    # T_a(n, k) = Sum_q (u_a(hn+q) u_a(hn+q+k) w(q)) / (2N+1−k)
-    hl = 512*48000//sample_rate
-    wl = 5*sample_rate//(512*48000//sample_rate)
-    # TODO: y and onset_envelope need to be the same sr
-    tempo = tempogram(
-        y=time_series, onset_envelope=onset_envelopes, sr=sample_rate,
-        hop_length=512*48000//sample_rate,
-        win_length=5*sample_rate//(512*48000//sample_rate)
-    )
-    # plot_colormesh(times, frequencies, tempo)
 
 
 def get_directogram(flow):
@@ -60,7 +44,7 @@ def get_directogram(flow):
 
 def get_impact_envelopes(directograms, times, plot=False):
     directogram = np.vstack(directograms)
-    filtered_directogram = medfilt2d(directogram)
+    filtered_directogram = scisignal.medfilt2d(directogram)
     if plot:
         plot_colormesh(
             times, HISTOGRAM_BINS, directogram.T,

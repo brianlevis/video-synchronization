@@ -16,6 +16,52 @@ def librosa_peaks(media):
     return peak_indices
 
 
+def get_beats(media):
+    # T_a(n, k) = Sum_q (u_a(hn+q) u_a(hn+q+k) w(q)) / (2N+1−k)
+    hop_length = round(media.sample_rate / media.envelope_sample_rate)
+    # tempogram = librosa.feature.tempogram(
+    #     onset_envelope=media.envelopes, sr=media.sample_rate,
+    #     hop_length=hop_length,
+    #     win_length=5*media.sample_rate/hop_length
+    # )
+    # ac_global = librosa.autocorrelate(media.envelopes, max_size=tempogram.shape[0])
+    # ac_global = librosa.util.normalize(ac_global)
+
+    # Calculate tempo as a step function of time
+    tempo = librosa.beat.tempo(
+        onset_envelope=media.envelopes,
+        sr=media.sample_rate,
+        hop_length=hop_length,
+        ac_size=5.0,
+        aggregate=None
+    )
+    assert len(tempo) == len(media.envelopes)
+    beat_stack = []
+    section_begin = 0
+    for i in range(len(media.envelopes)):
+        section_tempo = tempo[section_begin]
+        if i == len(tempo) - 1 or tempo[i] != section_tempo:
+            if i - section_begin >= 5:
+                # Find beats for each tempo section
+                _, section_beat_indices = librosa.beat.beat_track(
+                    onset_envelope=media.envelopes[section_begin:i],
+                    sr=media.sample_rate,
+                    hop_length=hop_length,
+                    trim=False,
+                    bpm=section_tempo
+                )
+                # The beats correspond to envelope indices for some reason
+                section_start_time = media.envelope_times[section_begin]
+                beat_times = section_start_time + section_beat_indices / media.envelope_sample_rate
+                global_beat_indices = (beat_times * media.sample_rate).astype(np.int)
+                beat_stack.append(global_beat_indices)
+            section_begin = i
+    beats = np.hstack(beat_stack)
+    # peak_times = media.envelope_times[beats]
+    # peak_indices = (peak_times * media.sample_rate).astype('int')
+    return beats
+
+
 def impacts(media):
     """Find impacts as specified in Visual Rhythm and Beats."""
     global_max = media.envelopes.max()

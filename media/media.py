@@ -8,6 +8,7 @@ import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 from imutils.video import FileVideoStream
+from scipy import interpolate
 
 from synchronize import get_directogram, get_impact_envelopes
 
@@ -54,13 +55,16 @@ class Media(ABC):
         ) = data
 
     def plot(self, markers=None):
-        num_points = min(len(self.envelopes), int(30 * self.sample_rate))
+        plt.clf()
+        num_points = min(len(self.envelopes), int(30 * self.envelope_sample_rate))
         fig = plt.figure(figsize=(40, 5))
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(self.envelope_times[:num_points], self.envelopes[:num_points])
         if markers is not None:
-            markers = markers[np.where(markers < num_points)]
-            ax.plot(self.envelope_times[markers], self.envelopes[:num_points][markers], 'x')
+            marker_times = markers / self.sample_rate
+            marker_times = marker_times[np.where(marker_times < 30)]
+            marker_values = interpolate.interp1d(self.envelope_times, self.envelopes)(marker_times)
+            ax.plot(marker_times, marker_values, 'x')
         plt.savefig(self.file_name + '.png')
         plt.show()
 
@@ -97,7 +101,7 @@ class Audio(Media):
             data, sample_rate = librosa.load(self.file_name, mono=False)
             old_length = data.shape[1]
             tail = new_length - old_length * (new_length // old_length)
-            extended_data = np.vstack(tuple([data] * (new_length // old_length) + [data[:, :tail]]))
+            extended_data = np.hstack(tuple([data] * (new_length // old_length) + [data[:, :tail]]))
             librosa.output.write_wav(self.extended_file_name, extended_data, sample_rate)
 
 
